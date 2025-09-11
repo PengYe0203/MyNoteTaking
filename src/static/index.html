@@ -336,6 +336,10 @@
             <div class="sidebar">
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search notes...">
                 <button class="new-note-btn" id="newNoteBtn">✨ New Note</button>
+                <select id="sortSelect" class="search-box" style="margin-top:-5px;margin-bottom:15px;padding:8px 12px;">
+                    <option value="updated_desc">Sort: Updated (Newest)</option>
+                    <option value="title_asc">Sort: Title (A→Z)</option>
+                </select>
                 
                 <div class="notes-list" id="notesList">
                     <div class="loading">Loading notes...</div>
@@ -379,7 +383,30 @@
                 this.notes = [];
                 this.currentNote = null;
                 this.isLoading = false;
+                this.sortMode = 'updated_desc'; // 'updated_desc' | 'title_asc'
                 this.init();
+            }
+
+            // Ensure notes are always sorted by updated_at (desc)
+            sortNotes() {
+                if (this.sortMode === 'updated_desc') {
+                    this.notes.sort((a, b) => {
+                        const da = new Date(a.updated_at || a.created_at || 0);
+                        const db = new Date(b.updated_at || b.created_at || 0);
+                        return db - da; // newest first
+                    });
+                } else if (this.sortMode === 'title_asc') {
+                    this.notes.sort((a, b) => {
+                        const ta = (a.title || '').toLowerCase();
+                        const tb = (b.title || '').toLowerCase();
+                        if (ta < tb) return -1;
+                        if (ta > tb) return 1;
+                        // fallback by updated time desc
+                        const da = new Date(a.updated_at || a.created_at || 0);
+                        const db = new Date(b.updated_at || b.created_at || 0);
+                        return db - da;
+                    });
+                }
             }
 
             async init() {
@@ -403,6 +430,11 @@
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
+                document.getElementById('sortSelect').addEventListener('change', (e) => {
+                    this.sortMode = e.target.value;
+                    this.sortNotes();
+                    this.renderNotesList();
+                });
                 
                 // Auto-save on content change (debounced)
                 let saveTimeout;
@@ -433,6 +465,7 @@
                     if (!response.ok) throw new Error('Failed to load notes');
                     
                     this.notes = await response.json();
+                    this.sortNotes();
                     this.renderNotesList();
                     this.hideMessage();
                 } catch (error) {
@@ -576,6 +609,7 @@
                         this.notes.unshift(savedNote);
                     }
                     
+                    this.sortNotes();
                     this.renderNotesList();
                     document.getElementById('editorTitle').textContent = savedNote.title;
                     
@@ -606,6 +640,7 @@
 
                     // Remove from notes array
                     this.notes = this.notes.filter(n => n.id !== this.currentNote.id);
+                    this.sortNotes();
                     this.renderNotesList();
                     this.hideEditor();
                     this.showMessage('Note deleted successfully!', 'success');
