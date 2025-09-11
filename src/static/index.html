@@ -142,6 +142,8 @@
             color: #666;
             line-height: 1.4;
             display: -webkit-box;
+            /* 新增标准属性 */
+            line-clamp: 2;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
@@ -321,6 +323,10 @@
         .notes-list::-webkit-scrollbar-thumb:hover {
             background: #5a6fd8;
         }
+    .sort-toggle {display:flex;gap:8px;margin-top:-5px;margin-bottom:15px;}
+    .sort-btn {flex:1;padding:8px 10px;font-size:12px;border:2px solid #667eea;background:#fff;color:#667eea;border-radius:8px;cursor:pointer;font-weight:600;letter-spacing:.5px;transition:all .2s ease;}
+    .sort-btn:hover {background:#eef1ff;}
+    .sort-btn.active {background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;box-shadow:0 3px 8px rgba(102,126,234,0.4);}
     </style>
 </head>
 <body>
@@ -334,6 +340,10 @@
             <div class="sidebar">
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search notes...">
                 <button class="new-note-btn" id="newNoteBtn">✨ New Note</button>
+                <div class="sort-toggle">
+                    <button type="button" id="sortUpdatedBtn" class="sort-btn active" title="Sort by last updated (newest first)">Updated</button>
+                    <button type="button" id="sortTitleBtn" class="sort-btn" title="Sort by title A→Z">Title A→Z</button>
+                </div>
                 
                 <div class="notes-list" id="notesList">
                     <div class="loading">Loading notes...</div>
@@ -345,7 +355,7 @@
                     <h2 class="editor-title" id="editorTitle">Select a note to edit</h2>
                     <div class="editor-actions" id="editorActions" style="display: none;">
                         <button class="btn btn-save" id="saveBtn">💾 Save</button>
-                        <button class="btn btn-delete" id="deleteBtn">🗑️ Delete</button>
+                        <button class="btn btn-delete" id="deleteBtn" style="display:none;">🗑️ Delete</button>
                     </div>
                 </div>
 
@@ -353,8 +363,8 @@
 
                 <div id="editorForm" style="display: none;">
                     <div class="form-group">
-                        <label class="form-label" for="noteTitle">Title</label>
-                        <input type="text" class="form-input" id="noteTitle" placeholder="Enter note title...">
+                        <label class="form-label" for="noteTitle">Title <span id="titleLen" style="font-size:12px;color:#666;font-weight:400;">0/30</span></label>
+                        <input type="text" class="form-input" id="noteTitle" placeholder="Enter note title..." maxlength="30">
                     </div>
 
                     <div class="form-group">
@@ -377,7 +387,30 @@
                 this.notes = [];
                 this.currentNote = null;
                 this.isLoading = false;
+                this.sortMode = 'updated_desc'; // 'updated_desc' | 'title_asc'
                 this.init();
+            }
+
+            // Ensure notes are always sorted by updated_at (desc)
+            sortNotes() {
+                if (this.sortMode === 'updated_desc') {
+                    this.notes.sort((a, b) => {
+                        const da = new Date(a.updated_at || a.created_at || 0);
+                        const db = new Date(b.updated_at || b.created_at || 0);
+                        return db - da; // newest first
+                    });
+                } else if (this.sortMode === 'title_asc') {
+                    this.notes.sort((a, b) => {
+                        const ta = (a.title || '').toLowerCase();
+                        const tb = (b.title || '').toLowerCase();
+                        if (ta < tb) return -1;
+                        if (ta > tb) return 1;
+                        // fallback by updated time desc
+                        const da = new Date(a.updated_at || a.created_at || 0);
+                        const db = new Date(b.updated_at || b.created_at || 0);
+                        return db - da;
+                    });
+                }
             }
 
             async init() {
@@ -386,10 +419,32 @@
             }
 
             bindEvents() {
-                document.getElementById('newNoteBtn').addEventListener('click', () => this.createNewNote());
+                document.getElementById('newNoteBtn').addEventListener('click', () => {
+                    // If currently editing an unsaved new note (no id, has any input), confirm before discarding
+                    if (this.currentNote && !this.currentNote.id) {
+                        const titleVal = document.getElementById('noteTitle').value.trim();
+                        const contentVal = document.getElementById('noteContent').value.trim();
+                        if (titleVal.length > 0 || contentVal.length > 0) {
+                            const discard = confirm('You are already creating a note. Discard current draft and start a new one?');
+                            if (!discard) return; // keep editing current draft
+                        }
+                    }
+                    this.createNewNote();
+                });
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
+                const updatedBtn = document.getElementById('sortUpdatedBtn');
+                const titleBtn = document.getElementById('sortTitleBtn');
+                const applySortMode = (mode) => {
+                    this.sortMode = mode;
+                    updatedBtn.classList.toggle('active', mode === 'updated_desc');
+                    titleBtn.classList.toggle('active', mode === 'title_asc');
+                    this.sortNotes();
+                    this.renderNotesList();
+                };
+                updatedBtn.addEventListener('click', () => applySortMode('updated_desc'));
+                titleBtn.addEventListener('click', () => applySortMode('title_asc'));
                 
                 // Auto-save on content change (debounced)
                 let saveTimeout;
@@ -402,7 +457,12 @@
                     }, 2000);
                 };
                 
-                document.getElementById('noteTitle').addEventListener('input', autoSave);
+                const titleInput = document.getElementById('noteTitle');
+                const titleLen = document.getElementById('titleLen');
+                titleInput.addEventListener('input', () => {
+                    titleLen.textContent = `${titleInput.value.length}/30`;
+                });
+                titleInput.addEventListener('input', autoSave);
                 document.getElementById('noteContent').addEventListener('input', autoSave);
             }
 
@@ -415,6 +475,7 @@
                     if (!response.ok) throw new Error('Failed to load notes');
                     
                     this.notes = await response.json();
+                    this.sortNotes();
                     this.renderNotesList();
                     this.hideMessage();
                 } catch (error) {
@@ -432,11 +493,11 @@
                     return;
                 }
 
-                notesList.innerHTML = this.notes.map(note => `
+        notesList.innerHTML = this.notes.map(note => `
                     <div class="note-item ${this.currentNote && this.currentNote.id === note.id ? 'active' : ''}" 
                          data-note-id="${note.id}" onclick="noteTaker.selectNote(${note.id})">
                         <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
-                        <div class="note-preview">${this.escapeHtml(note.content || 'No content')}</div>
+            <div class="note-preview">${this.escapeHtml(this.previewText(note.content))}</div>
                         <div class="note-date">${this.formatDate(note.updated_at)}</div>
                     </div>
                 `).join('');
@@ -469,6 +530,8 @@
                 document.getElementById('noteContent').value = '';
                 document.getElementById('editorTitle').textContent = 'New Note';
                 document.getElementById('noteTitle').focus();
+                // hide delete button for unsaved new note
+                document.getElementById('deleteBtn').style.display = 'none';
                 
                 // Remove active state from all notes
                 document.querySelectorAll('.note-item').forEach(item => {
@@ -480,6 +543,9 @@
                 document.getElementById('emptyState').style.display = 'none';
                 document.getElementById('editorForm').style.display = 'block';
                 document.getElementById('editorActions').style.display = 'flex';
+                // toggle delete button based on currentNote.can_delete (default true if not provided)
+                const canDelete = this.currentNote && this.currentNote.can_delete !== undefined ? this.currentNote.can_delete : !!(this.currentNote && this.currentNote.id);
+                document.getElementById('deleteBtn').style.display = canDelete ? 'inline-block' : 'none';
             }
 
             hideEditor() {
@@ -526,10 +592,24 @@
                         });
                     }
 
-                    if (!response.ok) throw new Error('Failed to save note');
+                    if (!response.ok) {
+                        let msg = 'Failed to save note';
+                        try {
+                            const errJson = await response.json();
+                            if (errJson && errJson.error) msg = errJson.error;
+                        } catch(_) {}
+                        throw new Error(msg);
+                    }
 
                     const savedNote = await response.json();
                     this.currentNote = savedNote;
+                    // after first save if backend returns can_delete=false, keep hidden until list refresh
+                    const deleteBtn = document.getElementById('deleteBtn');
+                    if (savedNote.can_delete === false) {
+                        deleteBtn.style.display = 'none';
+                    } else {
+                        deleteBtn.style.display = 'inline-block';
+                    }
                     
                     // Update notes list
                     const existingIndex = this.notes.findIndex(n => n.id === savedNote.id);
@@ -539,6 +619,7 @@
                         this.notes.unshift(savedNote);
                     }
                     
+                    this.sortNotes();
                     this.renderNotesList();
                     document.getElementById('editorTitle').textContent = savedNote.title;
                     
@@ -546,7 +627,7 @@
                         this.showMessage('Note saved successfully!', 'success');
                     }
                 } catch (error) {
-                    this.showMessage(`Error saving note: ${error.message}`, 'error');
+                        this.showMessage(error.message, 'error'); // Use raw backend error message
                 }
             }
 
@@ -564,6 +645,7 @@
 
                     // Remove from notes array
                     this.notes = this.notes.filter(n => n.id !== this.currentNote.id);
+                    this.sortNotes();
                     this.renderNotesList();
                     this.hideEditor();
                     this.showMessage('Note deleted successfully!', 'success');
@@ -585,11 +667,11 @@
                     return;
                 }
 
-                notesList.innerHTML = filteredNotes.map(note => `
+        notesList.innerHTML = filteredNotes.map(note => `
                     <div class="note-item ${this.currentNote && this.currentNote.id === note.id ? 'active' : ''}" 
                          data-note-id="${note.id}" onclick="noteTaker.selectNote(${note.id})">
                         <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
-                        <div class="note-preview">${this.escapeHtml(note.content || 'No content')}</div>
+            <div class="note-preview">${this.escapeHtml(this.previewText(note.content))}</div>
                         <div class="note-date">${this.formatDate(note.updated_at)}</div>
                     </div>
                 `).join('');
@@ -612,6 +694,13 @@
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            }
+
+            previewText(raw) {
+                if (!raw) return 'No content';
+                const singleLine = raw.replace(/\s+/g, ' ').trim();
+                if (singleLine.length <= 40) return singleLine;
+                return singleLine.slice(0, 40) + '…';
             }
 
             formatDate(dateString) {
