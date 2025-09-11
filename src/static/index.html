@@ -323,6 +323,10 @@
         .notes-list::-webkit-scrollbar-thumb:hover {
             background: #5a6fd8;
         }
+    .sort-toggle {display:flex;gap:8px;margin-top:-5px;margin-bottom:15px;}
+    .sort-btn {flex:1;padding:8px 10px;font-size:12px;border:2px solid #667eea;background:#fff;color:#667eea;border-radius:8px;cursor:pointer;font-weight:600;letter-spacing:.5px;transition:all .2s ease;}
+    .sort-btn:hover {background:#eef1ff;}
+    .sort-btn.active {background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;box-shadow:0 3px 8px rgba(102,126,234,0.4);}
     </style>
 </head>
 <body>
@@ -336,10 +340,10 @@
             <div class="sidebar">
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search notes...">
                 <button class="new-note-btn" id="newNoteBtn">✨ New Note</button>
-                <select id="sortSelect" class="search-box" style="margin-top:-5px;margin-bottom:15px;padding:8px 12px;">
-                    <option value="updated_desc">Sort: Updated (Newest)</option>
-                    <option value="title_asc">Sort: Title (A→Z)</option>
-                </select>
+                <div class="sort-toggle">
+                    <button type="button" id="sortUpdatedBtn" class="sort-btn active" title="Sort by last updated (newest first)">Updated</button>
+                    <button type="button" id="sortTitleBtn" class="sort-btn" title="Sort by title A→Z">Title A→Z</button>
+                </div>
                 
                 <div class="notes-list" id="notesList">
                     <div class="loading">Loading notes...</div>
@@ -430,11 +434,17 @@
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
-                document.getElementById('sortSelect').addEventListener('change', (e) => {
-                    this.sortMode = e.target.value;
+                const updatedBtn = document.getElementById('sortUpdatedBtn');
+                const titleBtn = document.getElementById('sortTitleBtn');
+                const applySortMode = (mode) => {
+                    this.sortMode = mode;
+                    updatedBtn.classList.toggle('active', mode === 'updated_desc');
+                    titleBtn.classList.toggle('active', mode === 'title_asc');
                     this.sortNotes();
                     this.renderNotesList();
-                });
+                };
+                updatedBtn.addEventListener('click', () => applySortMode('updated_desc'));
+                titleBtn.addEventListener('click', () => applySortMode('title_asc'));
                 
                 // Auto-save on content change (debounced)
                 let saveTimeout;
@@ -483,11 +493,11 @@
                     return;
                 }
 
-                notesList.innerHTML = this.notes.map(note => `
+        notesList.innerHTML = this.notes.map(note => `
                     <div class="note-item ${this.currentNote && this.currentNote.id === note.id ? 'active' : ''}" 
                          data-note-id="${note.id}" onclick="noteTaker.selectNote(${note.id})">
                         <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
-                        <div class="note-preview">${this.escapeHtml(note.content || 'No content')}</div>
+            <div class="note-preview">${this.escapeHtml(this.previewText(note.content))}</div>
                         <div class="note-date">${this.formatDate(note.updated_at)}</div>
                     </div>
                 `).join('');
@@ -657,11 +667,11 @@
                     return;
                 }
 
-                notesList.innerHTML = filteredNotes.map(note => `
+        notesList.innerHTML = filteredNotes.map(note => `
                     <div class="note-item ${this.currentNote && this.currentNote.id === note.id ? 'active' : ''}" 
                          data-note-id="${note.id}" onclick="noteTaker.selectNote(${note.id})">
                         <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
-                        <div class="note-preview">${this.escapeHtml(note.content || 'No content')}</div>
+            <div class="note-preview">${this.escapeHtml(this.previewText(note.content))}</div>
                         <div class="note-date">${this.formatDate(note.updated_at)}</div>
                     </div>
                 `).join('');
@@ -684,6 +694,13 @@
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            }
+
+            previewText(raw) {
+                if (!raw) return 'No content';
+                const singleLine = raw.replace(/\s+/g, ' ').trim();
+                if (singleLine.length <= 40) return singleLine;
+                return singleLine.slice(0, 40) + '…';
             }
 
             formatDate(dateString) {
