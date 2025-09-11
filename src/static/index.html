@@ -388,7 +388,18 @@
             }
 
             bindEvents() {
-                document.getElementById('newNoteBtn').addEventListener('click', () => this.createNewNote());
+                document.getElementById('newNoteBtn').addEventListener('click', () => {
+                    // If currently editing an unsaved new note (no id, has any input), confirm before discarding
+                    if (this.currentNote && !this.currentNote.id) {
+                        const titleVal = document.getElementById('noteTitle').value.trim();
+                        const contentVal = document.getElementById('noteContent').value.trim();
+                        if (titleVal.length > 0 || contentVal.length > 0) {
+                            const discard = confirm('You are already creating a note. Discard current draft and start a new one?');
+                            if (!discard) return; // keep editing current draft
+                        }
+                    }
+                    this.createNewNote();
+                });
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
