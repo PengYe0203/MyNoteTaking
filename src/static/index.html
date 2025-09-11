@@ -345,7 +345,7 @@
                     <h2 class="editor-title" id="editorTitle">Select a note to edit</h2>
                     <div class="editor-actions" id="editorActions" style="display: none;">
                         <button class="btn btn-save" id="saveBtn">💾 Save</button>
-                        <button class="btn btn-delete" id="deleteBtn">🗑️ Delete</button>
+                        <button class="btn btn-delete" id="deleteBtn" style="display:none;">🗑️ Delete</button>
                     </div>
                 </div>
 
@@ -469,6 +469,8 @@
                 document.getElementById('noteContent').value = '';
                 document.getElementById('editorTitle').textContent = 'New Note';
                 document.getElementById('noteTitle').focus();
+                // hide delete button for unsaved new note
+                document.getElementById('deleteBtn').style.display = 'none';
                 
                 // Remove active state from all notes
                 document.querySelectorAll('.note-item').forEach(item => {
@@ -480,6 +482,9 @@
                 document.getElementById('emptyState').style.display = 'none';
                 document.getElementById('editorForm').style.display = 'block';
                 document.getElementById('editorActions').style.display = 'flex';
+                // toggle delete button based on currentNote.can_delete (default true if not provided)
+                const canDelete = this.currentNote && this.currentNote.can_delete !== undefined ? this.currentNote.can_delete : !!(this.currentNote && this.currentNote.id);
+                document.getElementById('deleteBtn').style.display = canDelete ? 'inline-block' : 'none';
             }
 
             hideEditor() {
@@ -530,6 +535,13 @@
 
                     const savedNote = await response.json();
                     this.currentNote = savedNote;
+                    // after first save if backend returns can_delete=false, keep hidden until list refresh
+                    const deleteBtn = document.getElementById('deleteBtn');
+                    if (savedNote.can_delete === false) {
+                        deleteBtn.style.display = 'none';
+                    } else {
+                        deleteBtn.style.display = 'inline-block';
+                    }
                     
                     // Update notes list
                     const existingIndex = this.notes.findIndex(n => n.id === savedNote.id);
