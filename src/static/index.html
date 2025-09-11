@@ -323,6 +323,10 @@
         .notes-list::-webkit-scrollbar-thumb:hover {
             background: #5a6fd8;
         }
+    .sort-toggle {display:flex;gap:8px;margin-top:-5px;margin-bottom:15px;}
+    .sort-btn {flex:1;padding:8px 10px;font-size:12px;border:2px solid #667eea;background:#fff;color:#667eea;border-radius:8px;cursor:pointer;font-weight:600;letter-spacing:.5px;transition:all .2s ease;}
+    .sort-btn:hover {background:#eef1ff;}
+    .sort-btn.active {background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;box-shadow:0 3px 8px rgba(102,126,234,0.4);}
     </style>
 </head>
 <body>
@@ -336,10 +340,10 @@
             <div class="sidebar">
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search notes...">
                 <button class="new-note-btn" id="newNoteBtn">✨ New Note</button>
-                <select id="sortSelect" class="search-box" style="margin-top:-5px;margin-bottom:15px;padding:8px 12px;">
-                    <option value="updated_desc">Sort: Updated (Newest)</option>
-                    <option value="title_asc">Sort: Title (A→Z)</option>
-                </select>
+                <div class="sort-toggle">
+                    <button type="button" id="sortUpdatedBtn" class="sort-btn active" title="Sort by last updated (newest first)">Updated</button>
+                    <button type="button" id="sortTitleBtn" class="sort-btn" title="Sort by title A→Z">Title A→Z</button>
+                </div>
                 
                 <div class="notes-list" id="notesList">
                     <div class="loading">Loading notes...</div>
@@ -430,11 +434,17 @@
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
-                document.getElementById('sortSelect').addEventListener('change', (e) => {
-                    this.sortMode = e.target.value;
+                const updatedBtn = document.getElementById('sortUpdatedBtn');
+                const titleBtn = document.getElementById('sortTitleBtn');
+                const applySortMode = (mode) => {
+                    this.sortMode = mode;
+                    updatedBtn.classList.toggle('active', mode === 'updated_desc');
+                    titleBtn.classList.toggle('active', mode === 'title_asc');
                     this.sortNotes();
                     this.renderNotesList();
-                });
+                };
+                updatedBtn.addEventListener('click', () => applySortMode('updated_desc'));
+                titleBtn.addEventListener('click', () => applySortMode('title_asc'));
                 
                 // Auto-save on content change (debounced)
                 let saveTimeout;
@@ -625,11 +635,6 @@
                 if (!this.currentNote || !this.currentNote.id) return;
 
                 if (!confirm('Are you sure you want to delete this note?')) return;
-
-                if (title.length > 30) {
-                    if (!isAutoSave) this.showMessage('Title should be less than 30 characters', 'error');
-                    return;
-                }
 
                 try {
                     const response = await fetch(`/api/notes/${this.currentNote.id}`, {

@@ -11,7 +11,7 @@ def get_notes():
 
 @note_bp.route('/notes', methods=['POST'])
 def create_note():
-    """Create a new note. Return can_delete=False so frontend hides delete button until list refresh."""
+    """Create a new note. Set can_delete=True so it can be deleted immediately after creation."""
     try:
         data = request.json
         if not data or 'title' not in data or 'content' not in data:
@@ -23,9 +23,8 @@ def create_note():
         note = Note(title=data['title'], content=data['content'])
         db.session.add(note)
         db.session.commit()
-
         resp = note.to_dict()
-        resp['can_delete'] = False  # explicitly mark newly created note as non-deletable (UI purpose only)
+        resp['can_delete'] = True
         return jsonify(resp), 201
     except Exception as e:
         db.session.rollback()
