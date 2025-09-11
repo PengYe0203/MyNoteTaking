@@ -16,6 +16,9 @@ def create_note():
         data = request.json
         if not data or 'title' not in data or 'content' not in data:
             return jsonify({'error': 'Title and content are required'}), 400
+        title = data['title'].strip()
+        if len(title) > 30:
+            return jsonify({'error': 'Title should be less than 30 characters'}), 400
 
         note = Note(title=data['title'], content=data['content'])
         db.session.add(note)
@@ -46,7 +49,11 @@ def update_note(note_id):
         if not data:
             return jsonify({'error': 'No data provided'}), 400
 
-        note.title = data.get('title', note.title)
+        if 'title' in data and data['title'] is not None:
+            new_title = data['title'].strip()
+            if len(new_title) > 30:
+                return jsonify({'error': 'Title should be less than 30 characters'}), 400
+            note.title = new_title or note.title
         note.content = data.get('content', note.content)
         db.session.commit()
         d = note.to_dict()

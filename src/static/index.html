@@ -355,8 +355,8 @@
 
                 <div id="editorForm" style="display: none;">
                     <div class="form-group">
-                        <label class="form-label" for="noteTitle">Title</label>
-                        <input type="text" class="form-input" id="noteTitle" placeholder="Enter note title...">
+                        <label class="form-label" for="noteTitle">Title <span id="titleLen" style="font-size:12px;color:#666;font-weight:400;">0/30</span></label>
+                        <input type="text" class="form-input" id="noteTitle" placeholder="Enter note title..." maxlength="30">
                     </div>
 
                     <div class="form-group">
@@ -404,7 +404,12 @@
                     }, 2000);
                 };
                 
-                document.getElementById('noteTitle').addEventListener('input', autoSave);
+                const titleInput = document.getElementById('noteTitle');
+                const titleLen = document.getElementById('titleLen');
+                titleInput.addEventListener('input', () => {
+                    titleLen.textContent = `${titleInput.value.length}/30`;
+                });
+                titleInput.addEventListener('input', autoSave);
                 document.getElementById('noteContent').addEventListener('input', autoSave);
             }
 
@@ -533,7 +538,14 @@
                         });
                     }
 
-                    if (!response.ok) throw new Error('Failed to save note');
+                    if (!response.ok) {
+                        let msg = 'Failed to save note';
+                        try {
+                            const errJson = await response.json();
+                            if (errJson && errJson.error) msg = errJson.error;
+                        } catch(_) {}
+                        throw new Error(msg);
+                    }
 
                     const savedNote = await response.json();
                     this.currentNote = savedNote;
@@ -560,7 +572,7 @@
                         this.showMessage('Note saved successfully!', 'success');
                     }
                 } catch (error) {
-                    this.showMessage(`Error saving note: ${error.message}`, 'error');
+                        this.showMessage(error.message, 'error'); // Use raw backend error message
                 }
             }
 
@@ -568,6 +580,11 @@
                 if (!this.currentNote || !this.currentNote.id) return;
 
                 if (!confirm('Are you sure you want to delete this note?')) return;
+
+                if (title.length > 30) {
+                    if (!isAutoSave) this.showMessage('Title should be less than 30 characters', 'error');
+                    return;
+                }
 
                 try {
                     const response = await fetch(`/api/notes/${this.currentNote.id}`, {
