@@ -1,5 +1,6 @@
 import os
 import sys
+from dotenv import load_dotenv
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -21,13 +22,31 @@ CORS(app)
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(note_bp, url_prefix='/api')
 app.register_blueprint(ai_bp, url_prefix='/api')
+
 # configure database to use repository-root `database/app.db`
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-DB_PATH = os.path.join(ROOT_DIR, 'database', 'app.db')
-# ensure database directory exists
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+env_path = os.path.join(ROOT_DIR, '.env')
+if os.path.exists(env_path):
+    load_dotenv(env_path)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DB_PATH}"
+# Try MySQL first; fall back to SQLite if MySQL vars missing
+mysql_user = os.getenv('MYSQL_USER')
+mysql_password = os.getenv('MYSQL_PASSWORD')
+mysql_host = os.getenv('MYSQL_HOST', 'localhost')
+mysql_port = os.getenv('MYSQL_PORT', '3306')
+mysql_db = os.getenv('MYSQL_DB')
+
+if mysql_user and mysql_password and mysql_db:
+    # 使用 pymysql 驱动
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}/{mysql_db}?charset=utf8mb4"
+    )
+else:
+    # configure database to use repository-root `database/app.db`
+    DB_PATH = os.path.join(ROOT_DIR, 'database', 'app.db')
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DB_PATH}"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 with app.app_context():
