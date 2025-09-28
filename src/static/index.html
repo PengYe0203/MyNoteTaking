@@ -354,17 +354,6 @@
                 <div class="editor-header">
                     <h2 class="editor-title" id="editorTitle">Select a note to edit</h2>
                     <div class="editor-actions" id="editorActions" style="display: none;">
-                        <!-- Language select for translation (placed left of Save) -->
-                        <select id="translateLangSelect" class="form-input" style="width:140px;padding:8px 10px;border-radius:8px;">
-                            <option value="Chinese">Chinese</option>
-                            <option value="English">English</option>
-                            <option value="Japanese">Japanese</option>
-                            <option value="Korean">Korean</option>
-                            <option value="Spanish">Spanish</option>
-                            <option value="French">French</option>
-                            <option value="German">German</option>
-                        </select>
-                        <button class="btn btn-translate" id="translateBtn" style="margin:0 8px;">🌐 Translate</button>
                         <button class="btn btn-save" id="saveBtn">💾 Save</button>
                         <button class="btn btn-delete" id="deleteBtn" style="display:none;">🗑️ Delete</button>
                     </div>
@@ -380,6 +369,20 @@
 
                     <div class="form-group">
                         <label class="form-label" for="noteContent">Content</label>
+                        <!-- AI translate controls (moved here between Title and Content) -->
+                        <div style="margin:8px 0;display:flex;align-items:center;gap:8px;">
+                            <div style="font-size:13px;color:#444;">use AI to help you translate your content</div>
+                            <select id="translateLangSelect" class="form-input" style="width:140px;padding:8px 10px;border-radius:8px;">
+                                <option value="Chinese">Chinese</option>
+                                <option value="English">English</option>
+                                <option value="Japanese">Japanese</option>
+                                <option value="Korean">Korean</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="French">French</option>
+                                <option value="German">German</option>
+                            </select>
+                            <button class="btn btn-translate" id="translateBtn" style="margin:0 8px;">🌐 Translate</button>
+                        </div>
                         <textarea class="form-textarea" id="noteContent" placeholder="Start writing your note..."></textarea>
                     </div>
                 </div>
