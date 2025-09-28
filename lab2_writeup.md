@@ -1,6 +1,7 @@
-# Step 1: using MySQL as database
+# Step 1: using external database instead of sqlite
 
 ~~Unfortunately, I found MySQL wasn't installed on the PC I'm using.~~
+
 ~~So I had to install MySQL before starting the lab. TT~~
 
 ### 27th Sept
@@ -9,19 +10,23 @@
 - I gonna change some lines about the connection to MySQL.
 - also, some variables need to be added to the `.env` file.
 
+
 23:11
 - my app couldn't connect to MySQL
 - it still used SQLite!! TT
 
+
 23:15
 - It seems I forgot some dependencies.
 - ai agent is helping me install them.
+
 
 23:22
 - It's confirmed: the problem was missing dependencies.
 - now the app's database is MySQL. 
 - only 10 minutes taken 
 - great ai!
+
 
 23:37
 - previous functions still work.
@@ -30,25 +35,37 @@
 - wish the deployment step goes as smoothly as step one.
 - good night world.
 
+
 23:52
 - my .md doesn't perform as I expected
 - try again
+
 
 ### 28th Sept
 10:59
 - database using now is in my pc localhost
 - I'm trying Planetscale 
 
+
 11:12
 - planetscale is no more free now. TT
 - go back to supabase now.
+
 
 11:49
 - my pc cannot reach host of supabase
 - maybe it's because I choose Singapore as region? --but I didn't find hk
 - I use my proxy but app still cannot work
 
+
 11:56
 - ai told me it was about ipv6
 - my pc or network don't have ipv6 route 
 - I will try my app in github codespaces
+
+
+14:59
+- the connection string I selected dosen't support ipv4
+- and there is another connection supporting ipv4 but I didn't find it before
+- why this bug can take me 3 hours?
+- stupid bug and stupid me. TT
