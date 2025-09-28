@@ -660,12 +660,17 @@
                                     });
 
                                     if (!trResp.ok) {
-                                        let tmsg = 'Translation failed';
-                                        try {
-                                            const tj = await trResp.json();
-                                            if (tj && tj.error) tmsg = tj.error;
-                                        } catch(_) {}
-                                        this.showMessage(tmsg, 'error');
+                                        if (trResp.status === 422) {
+                                            // Friendly message for content-filtering cases
+                                            this.showMessage('Translation blocked by content policy. Please edit the note and try again.', 'error');
+                                        } else {
+                                            let tmsg = 'Translation failed';
+                                            try {
+                                                const tj = await trResp.json();
+                                                if (tj && tj.error) tmsg = tj.error;
+                                            } catch(_) {}
+                                            this.showMessage(tmsg, 'error');
+                                        }
                                     } else {
                                         const tj = await trResp.json();
                                         if (tj && tj.translation) {
@@ -714,6 +719,10 @@
                     });
 
                     if (!resp.ok) {
+                        if (resp.status === 422) {
+                            this.showMessage('Translation blocked by content policy. Please edit the note and try again.', 'error');
+                            return;
+                        }
                         let msg = 'Translation failed';
                         try { const j = await resp.json(); if (j && j.error) msg = j.error; } catch(_){}
                         this.showMessage(msg, 'error');

@@ -94,7 +94,13 @@ def translate():
         from src import llm as llm_module
         translated = llm_module.call_llm_model(llm_module.model, messages)
     except Exception as e:
+        # Detect common content-filtering / policy errors surfaced by LLM clients
+        msg = str(e)
         current_app.logger.exception('LLM translate failed')
-        return jsonify({'error': 'Translation failed', 'detail': str(e)}), 500
+        if 'content_filter' in msg or 'ResponsibleAIPolicyViolation' in msg or 'content_filter_result' in msg:
+            # Return unprocessable entity so frontend can show a friendly message
+            return jsonify({'error': 'Translation blocked by model content filter', 'detail': msg}), 422
+        # Fallback: internal server error for other exceptions
+        return jsonify({'error': 'Translation failed', 'detail': msg}), 500
 
     return jsonify({'translation': translated})

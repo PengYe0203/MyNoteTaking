@@ -100,5 +100,14 @@
 - I learnt how to deploy app on vercel
 - to my surprise, I didn't change my python code in this step. everything seems to have been done in step 1 when writing logic of determining which database(sqlite, mysql or supabase) will be selected
 
-### Step2.1: add ai into app
+# Step2.1: add ai into app
 > I forget adding ai into my app, now I'm going to make it up
+### 29th Sept
+01:33
+- new function didn't work and error code is 405(Method Not Found)
+- the reason is api routes in frontend and backend are different
+
+01：50
+- I want to use ai to translante notes' content
+- but some sentences will cause 500 INTERNAL SERVER ERROR
+- that's because these sentences are sensitive so LLM refused to translate
