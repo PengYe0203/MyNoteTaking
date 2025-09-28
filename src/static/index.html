@@ -369,6 +369,20 @@
 
                     <div class="form-group">
                         <label class="form-label" for="noteContent">Content</label>
+                        <!-- AI translate controls (moved here between Title and Content) -->
+                        <div style="margin:8px 0;display:flex;align-items:center;gap:8px;">
+                            <div style="font-size:13px;color:#444;">use AI to help you translate your content</div>
+                            <select id="translateLangSelect" class="form-input" style="width:140px;padding:8px 10px;border-radius:8px;">
+                                <option value="Chinese">Chinese</option>
+                                <option value="English">English</option>
+                                <option value="Japanese">Japanese</option>
+                                <option value="Korean">Korean</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="French">French</option>
+                                <option value="German">German</option>
+                            </select>
+                            <button class="btn btn-translate" id="translateBtn" style="margin:0 8px;">🌐 Translate</button>
+                        </div>
                         <textarea class="form-textarea" id="noteContent" placeholder="Start writing your note..."></textarea>
                     </div>
                 </div>
@@ -432,6 +446,7 @@
                     this.createNewNote();
                 });
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
+                document.getElementById('translateBtn').addEventListener('click', () => this.translateNow());
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
                 const updatedBtn = document.getElementById('sortUpdatedBtn');
@@ -625,9 +640,112 @@
                     
                     if (!isAutoSave) {
                         this.showMessage('Note saved successfully!', 'success');
+
+                        // If a target language is selected, call translate endpoint
+                        try {
+                            const langSelect = document.getElementById('translateLangSelect');
+                            if (langSelect) {
+                                const target = langSelect.value;
+                                if (target && target !== '') {
+                                    // prefer sending note_id, fallback to text
+                                    const payload = { target };
+                                    if (this.currentNote && this.currentNote.id) {
+                                        payload.note_id = this.currentNote.id;
+                                    } else {
+                                        payload.text = content;
+                                    }
+
+                                    // fire-and-display result (await so errors can be shown)
+                                    const trResp = await fetch('/api/translate', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(payload)
+                                    });
+
+                                    if (!trResp.ok) {
+                                        if (trResp.status === 422) {
+                                            // Friendly message for content-filtering cases
+                                            this.showMessage('Translation blocked by content policy. Please edit the note and try again.', 'error');
+                                        } else {
+                                            let tmsg = 'Translation failed';
+                                            try {
+                                                const tj = await trResp.json();
+                                                if (tj && tj.error) tmsg = tj.error;
+                                            } catch(_) {}
+                                            this.showMessage(tmsg, 'error');
+                                        }
+                                    } else {
+                                        const tj = await trResp.json();
+                                        if (tj && tj.translation) {
+                                            this.showMessage(`Translation (${target}): ${tj.translation}`, 'success');
+                                        } else {
+                                            this.showMessage('Translation succeeded but no text returned', 'error');
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (trErr) {
+                            // show but don't block normal save flow
+                            this.showMessage(`Translation error: ${trErr.message}`, 'error');
+                        }
                     }
                 } catch (error) {
                         this.showMessage(error.message, 'error'); // Use raw backend error message
+                }
+            }
+
+            async translateNow() {
+                // Read selected language and content (or note id) and call /api/translate
+                const langSelect = document.getElementById('translateLangSelect');
+                const target = langSelect ? langSelect.value : 'Chinese';
+                const contentEl = document.getElementById('noteContent');
+                const text = contentEl ? contentEl.value : '';
+
+                if (!text || text.trim() === '') {
+                    this.showMessage('No content to translate', 'error');
+                    return;
+                }
+
+                const payload = { target };
+                if (this.currentNote && this.currentNote.id) {
+                    payload.note_id = this.currentNote.id;
+                } else {
+                    payload.text = text;
+                }
+
+                try {
+                    this.showMessage('Translating...', 'success');
+                    const resp = await fetch('/api/translate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!resp.ok) {
+                        if (resp.status === 422) {
+                            this.showMessage('Translation blocked by content policy. Please edit the note and try again.', 'error');
+                            return;
+                        }
+                        let msg = 'Translation failed';
+                        try { const j = await resp.json(); if (j && j.error) msg = j.error; } catch(_){}
+                        this.showMessage(msg, 'error');
+                        return;
+                    }
+
+                    const j = await resp.json();
+                    const translated = j && j.translation ? j.translation : null;
+                    if (!translated) {
+                        this.showMessage('No translation returned', 'error');
+                        return;
+                    }
+
+                    // Append a blank line and the translation to the content textarea
+                    const cur = contentEl.value || '';
+                    const separator = cur.trim() === '' ? '' : '\n\n';
+                    contentEl.value = cur + separator + translated;
+                    this.showMessage('Translation appended', 'success');
+                } catch (e) {
+                    this.showMessage(`Translation error: ${e.message}`, 'error');
                 }
             }
 
