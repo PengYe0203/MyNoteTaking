@@ -69,3 +69,11 @@
 - and there is another connection supporting ipv4 but I didn't find it before
 - why this bug can take me 3 hours?
 - stupid bug and stupid me. TT
+
+
+15:14
+- nice! my app is now using supabase as database
+
+### Summary/what I learnt in step 1
+- since my pc won't be always on, an external database on cloud is necessary. It's a primary truth and I should have known it, but I forgot it at the beginning. as a result, I did some useless work.
+- in my previous projects, I always use my own pc as server and database because I think operation on cloud would be very complex and costly, and I never try it before. But after these days' attempt, I found it really convenient!
