@@ -39,3 +39,16 @@
 - database using now is in my pc localhost
 - I'm trying Planetscale 
 
+11:12
+- planetscale is no more free now. TT
+- go back to supabase now.
+
+11:49
+- my pc cannot reach host of supabase
+- maybe it's because I choose Singapore as region? --but I didn't find hk
+- I use my proxy but app still cannot work
+
+11:56
+- ai told me it was about ipv6
+- my pc or network don't have ipv6 route 
+- I will try my app in github codespaces
