@@ -99,3 +99,6 @@
 ### Summary/what I learnt in step 2
 - I learnt how to deploy app on vercel
 - to my surprise, I didn't change my python code in this step. everything seems to have been done in step 1 when writing logic of determining which database(sqlite, mysql or supabase) will be selected
+
+### Step2.1: add ai into app
+> I forget adding ai into my app, now I'm going to make it up
