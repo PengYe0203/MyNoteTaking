@@ -82,4 +82,20 @@
 
 # Step 2: deploy my app on vercel
 ### 28th Sept
+16:12
+- I sign up an account on vercel and import this repo
+- but I can only use vercel for 14 days or I have to pay
 
+
+18:30
+- I guess I have successfully deployed this app: I can access this app in my phone while program in my vscode isn't running
+- I didn't change my source code in step 2 and only 2 extra file `vercel.json` and `.vercelignore` were added
+- actually there is a little question: users have to login in vercel
+
+
+18:47
+- now everybody can access this url without authentication
+- no lines are changed in any files. just change some settings in vercel dashboard
+### Summary/what I learnt in step 2
+- I learnt how to deploy app on vercel
+- to my surprise, I didn't change my python code in this step. everything seems to have been done in step 1 when writing logic of determining which database(sqlite, mysql or supabase) will be selected
