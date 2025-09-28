@@ -36,7 +36,13 @@ mysql_host = os.getenv('MYSQL_HOST', 'localhost')
 mysql_port = os.getenv('MYSQL_PORT', '3306')
 mysql_db = os.getenv('MYSQL_DB')
 
-if mysql_user and mysql_password and mysql_db:
+# Prefer a single DATABASE_URL (used by Heroku/Vercel/Planetscale). If present, use it.
+database_url = os.getenv('DATABASE_URL')
+
+if database_url:
+    # DATABASE_URL is preferred for cloud deployments (Vercel/Planetscale)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+elif mysql_user and mysql_password and mysql_db:
     # 使用 pymysql 驱动
     app.config['SQLALCHEMY_DATABASE_URI'] = (
         f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}/{mysql_db}?charset=utf8mb4"
@@ -49,8 +55,14 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
-with app.app_context():
-    db.create_all()
+
+# IMPORTANT: creating tables automatically in production (Planetscale) is unsafe because
+# Planetscale recommends using deploy requests / schema migration tooling for DDL.
+# Only auto-create tables when in debug/development or when explicitly allowed.
+AUTO_CREATE = os.getenv('AUTO_CREATE_TABLES', 'false').lower() in ('1', 'true', 'yes')
+if app.debug or AUTO_CREATE:
+    with app.app_context():
+        db.create_all()
 
 
 @app.after_request
