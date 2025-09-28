@@ -163,6 +163,25 @@ The application is configured for easy deployment with:
 - Automatic table creation on first run
 - SQLAlchemy ORM for database operations
 
+### Supabase (Postgres) Quickstart
+
+If you choose Supabase as your cloud database (recommended free tier), follow these steps:
+
+1. Create a project in Supabase and note the connection string (Settings → Database → Connection string).
+2. In Vercel (or your deployment platform) set an environment variable named `DATABASE_URL` to the SQLAlchemy-style URL, for example:
+
+   postgresql+psycopg2://<user>:<password>@<host>:5432/<database>
+
+3. Locally, install the Postgres driver and test the connection:
+
+```powershell
+C:/Users/ppy/AppData/Local/Programs/Python/Python313/python.exe -m pip install psycopg2-binary
+$env:DATABASE_URL = "postgresql+psycopg2://<user>:<password>@<host>:5432/<database>"
+C:/Users/ppy/AppData/Local/Programs/Python/Python313/python.exe .\scripts\print_db_uri.py
+```
+
+4. Migrations: do not rely on `db.create_all()` in production. Use Alembic or run DDL in a controlled environment (e.g., using Supabase SQL editor or a CI job).
+
 ## 📱 Browser Compatibility
 
 - Chrome/Chromium (recommended)

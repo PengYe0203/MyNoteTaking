@@ -33,3 +33,9 @@
 23:52
 - my .md doesn't perform as I expected
 - try again
+
+### 28th Sept
+10:59
+- database using now is in my pc localhost
+- I'm trying Planetscale 
+
