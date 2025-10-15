@@ -40,7 +40,8 @@
 <br>
 
 - Problem: I try to translate note's content but some sentences will cause 500 Internal Server Error
-- Reason & Solution: It's because these sentences are sensitive so LLM refused to translate. I can do nothing with it but add an error msg to tell users what's going on. However, I don't think my content is sensitive though<br>
+- Reason & Solution: It's because these sentences are sensitive so LLM refused to translate. I can do nothing with it but add an error msg to tell users what's going on. I don't think my content is sensitive though<br>
+![Blocked Content](./image/sensitiveContent.png)
 
 # Step2.2: restore supabase and redeployment
 
