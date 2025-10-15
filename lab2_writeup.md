@@ -3,15 +3,15 @@
 ### Problem and Solution
 
 - Problem: I spent one hour integrating MySQL, but my project still used SQLite as database
-- Reason&Solution: I forgot adding some variables in the `.env` file and installing some necessary dependencies.
+- Reason&Solution: I forgot adding some variables in the `.env` file and installing some necessary dependencies.<br>
 
 
 - Problem: AI told me that planetscale is a good way to put my database on cloud. However, this platform is no more free now. TT
-- Reason&Solution: You can choose to pay for it, but I choose to use Postgre and supabase instead. 
+- Reason&Solution: You can choose to pay for it, but I choose to use Postgre and supabase instead. <br>
 
 
 - Problem: my pc cannot reach host of supabase
-- Reason&Solution: It's beceause when I copied the connection string, I found there were multiple strings and I mistakenly chose a string that only support ipv6, and my pc/network don't have ipv6 route. There is another string connection string supporting ipv4! Don't be careless like me.
+- Reason&Solution: It's beceause when I copied the connection string, I found there were multiple strings and I mistakenly chose a string that only support ipv6, and my pc/network don't have ipv6 route. There is another string connection string supporting ipv4! Don't be careless like me.<br>
 
 
 ### Summary/what I learnt in step 1
@@ -25,7 +25,7 @@
 ### Problem and Solution
 
 - Problem: When other people try to visit my app, they have to login in vercel and apply for join my team.
-- Reason&Solution: I forgot changing the configuration about authentication. Go into Dashboard/Setting/Depolyment Protection and there is a "Vercel Authentication". Click it to "Disabled".
+- Reason&Solution: I forgot changing the configuration about authentication. Go into Dashboard/Setting/Depolyment Protection and there is a "Vercel Authentication". Click it to "Disabled".<br>
 
 
 ### Summary/what I learnt in step 2
@@ -36,11 +36,11 @@
 > I forget adding ai into my app, now I'm going to make it up
 
 - Problem: functions about AI didn't work and error code is 405 Method Not Found
-- Reason&Solution: It's because API routes in frontend and backend are different. AI make this stupid mistake and I didn't check it.
+- Reason&Solution: It's because API routes in frontend and backend are different. AI make this stupid mistake and I didn't check it.<br>
 
 
 - Problem: I try to translate note's content but some sentences will cause 500 Internal Server Error
-- Reason&Solution: It's because these sentences are sensitive so LLM refused to translate. I can do nothing with it but add an error msg to tell users what's going on.
+- Reason&Solution: It's because these sentences are sensitive so LLM refused to translate. I can do nothing with it but add an error msg to tell users what's going on.<br>
 
 # Step2.2: restore supabase and redeployment
 
