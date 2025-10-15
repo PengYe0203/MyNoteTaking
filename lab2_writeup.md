@@ -12,10 +12,13 @@
 
 - Problem: my pc cannot reach host of supabase
 - Reason & Solution: It's beceause when I copied the connection string, I found there were multiple strings and I mistakenly chose a string that only support ipv6, and my pc/network don't have ipv6 route. There is another string connection string supporting ipv4! Don't be careless like me.<br>
+![connection string example](./image/connectionString.png)
+
 
 ### Summary/what I learnt in step 1
 - since my pc won't be always on, an external database on cloud is necessary. It's a primary truth and I should have known it, but I forgot it at the beginning. as a result, I did some useless work.
 - in my previous projects, I always use my own pc as server and database because I think operation on cloud would be very complex and costly, and I never try it before. But after these days' attempt, I found it really convenient!
+
 
 # Step 2: deploy my app on vercel
 
@@ -23,7 +26,7 @@
 
 - Problem: When other people try to visit my app, they have to login in vercel and apply for join my team.
 - Reason & Solution: I forgot changing the configuration about authentication. Go into Dashboard/Setting/Depolyment Protection and there is a "Vercel Authentication". Click it to "Disabled".
-
+![Vercel authentication setting](./image/VercelAuthentication.png)
 
 ### Summary/what I learnt in step 2
 - I learnt how to deploy app on vercel
