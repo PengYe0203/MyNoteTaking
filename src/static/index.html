@@ -354,6 +354,7 @@
                 <div class="editor-header">
                     <h2 class="editor-title" id="editorTitle">Select a note to edit</h2>
                     <div class="editor-actions" id="editorActions" style="display: none;">
+                        <button class="btn btn-ai" id="generateAiBtn">🤖 Generate with AI</button>
                         <button class="btn btn-save" id="saveBtn">💾 Save</button>
                         <button class="btn btn-delete" id="deleteBtn" style="display:none;">🗑️ Delete</button>
                     </div>
@@ -392,6 +393,34 @@
                     <p>Select an existing note or create a new one to get started.</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- AI Generate Modal -->
+    <div id="aiGenerateModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;padding:20px;z-index:9999;">
+        <div style="width:100%;max-width:640px;background:#fff;border-radius:12px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,0.25);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0">🤖 Generate Note with AI</h3>
+                <button id="aiModalClose" style="border:none;background:transparent;font-size:20px;cursor:pointer;">✕</button>
+            </div>
+            <div style="margin-bottom:10px;color:#444;font-size:14px;">Describe what you want to note (in natural language):</div>
+            <textarea id="aiPromptInput" style="width:100%;min-height:120px;padding:10px;border:1px solid #e1e5e9;border-radius:8px;font-size:14px;" placeholder="e.g. Lunch 12:30pm tomorrow with Alex at Cafe..."></textarea>
+            <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
+                <div style="font-size:13px;color:#444;">Output Language:</div>
+                <select id="aiOutputLang" style="padding:8px 10px;border-radius:8px;border:1px solid #e1e5e9;">
+                    <option value="English">English</option>
+                    <option value="Chinese">Chinese</option>
+                    <option value="Japanese">Japanese</option>
+                    <option value="Korean">Korean</option>
+                    <option value="Spanish">Spanish</option>
+                    <option value="French">French</option>
+                    <option value="German">German</option>
+                </select>
+                <div style="flex:1"></div>
+                <button id="aiGenerateConfirm" class="btn" style="background:#667eea;color:#fff;border-radius:8px;padding:8px 14px;">Generate</button>
+                <button id="aiGenerateCancel" class="btn" style="background:#f1f1f1;border-radius:8px;padding:8px 14px;">Cancel</button>
+            </div>
+            <div id="aiGenerateStatus" style="margin-top:10px;font-size:13px;color:#666;"></div>
         </div>
     </div>
 
@@ -447,6 +476,69 @@
                 });
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
                 document.getElementById('translateBtn').addEventListener('click', () => this.translateNow());
+                // AI generate button bindings
+                const genBtn = document.getElementById('generateAiBtn');
+                const aiModal = document.getElementById('aiGenerateModal');
+                const aiClose = document.getElementById('aiModalClose');
+                const aiCancel = document.getElementById('aiGenerateCancel');
+                const aiConfirm = document.getElementById('aiGenerateConfirm');
+                genBtn.addEventListener('click', () => {
+                    // open modal
+                    document.getElementById('aiPromptInput').value = '';
+                    document.getElementById('aiGenerateStatus').textContent = '';
+                    aiModal.style.display = 'flex';
+                    document.getElementById('aiPromptInput').focus();
+                });
+                aiClose.addEventListener('click', () => aiModal.style.display = 'none');
+                aiCancel.addEventListener('click', () => aiModal.style.display = 'none');
+                aiConfirm.addEventListener('click', async () => {
+                    const prompt = document.getElementById('aiPromptInput').value.trim();
+                    const lang = document.getElementById('aiOutputLang').value || 'English';
+                    const status = document.getElementById('aiGenerateStatus');
+                    if (!prompt) {
+                        status.textContent = 'Please enter a description for the note.';
+                        return;
+                    }
+                    try {
+                        status.textContent = 'Generating...';
+                        aiConfirm.disabled = true;
+                        const resp = await fetch('/api/generate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ prompt, language: lang })
+                        });
+                        if (!resp.ok) {
+                            let msg = 'Generation failed';
+                            try { const j = await resp.json(); if (j && j.error) msg = j.error; } catch(_){}
+                            status.textContent = msg;
+                            aiConfirm.disabled = false;
+                            return;
+                        }
+                        const j = await resp.json();
+                        if (j && (j.title || j.content)) {
+                            // fill into editor
+                            document.getElementById('noteTitle').value = j.title || '';
+                            document.getElementById('noteContent').value = j.content || '';
+                            // update title length display
+                            document.getElementById('titleLen').textContent = `${document.getElementById('noteTitle').value.length}/30`;
+                            status.textContent = 'Generated. Closing...';
+                            // small delay to let user see status, then close modal
+                            setTimeout(() => {
+                                aiModal.style.display = 'none';
+                                // show global message area success
+                                const msgArea = document.getElementById('messageArea');
+                                msgArea.innerHTML = `<div class="success">AI generated content inserted. Please Save to persist.</div>`;
+                                setTimeout(() => { msgArea.innerHTML = ''; }, 3000);
+                            }, 700);
+                        } else {
+                            status.textContent = 'No content returned from generator.';
+                        }
+                    } catch (e) {
+                        status.textContent = `Error: ${e.message}`;
+                    } finally {
+                        aiConfirm.disabled = false;
+                    }
+                });
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
                 const updatedBtn = document.getElementById('sortUpdatedBtn');

@@ -1,78 +1,18 @@
 # Step 1: using external database instead of sqlite
 
-~~Unfortunately, I found MySQL wasn't installed on the PC I'm using.~~
+### Problem and Solution
 
-~~So I had to install MySQL before starting the lab. TT~~
-
-### 27th Sept
-
-22:58
-- I gonna change some lines about the connection to MySQL.
-- also, some variables need to be added to the `.env` file.
+- Problem: I spent one hour integrating MySQL, but my project still used SQLite as database
+- Reason&Solution: I forgot adding some variables in the `.env` file and installing some necessary dependencies.
 
 
-23:11
-- my app couldn't connect to MySQL
-- it still used SQLite!! TT
+- Problem: AI told me that planetscale is a good way to put my database on cloud. However, this platform is no more free now. TT
+- Reason&Solution: You can choose to pay for it, but I choose to use Postgre and supabase instead. 
 
 
-23:15
-- It seems I forgot some dependencies.
-- ai agent is helping me install them.
+- Problem: my pc cannot reach host of supabase
+- Reason&Solution: It's beceause when I copied the connection string, I found there were multiple strings and I mistakenly chose a string that only support ipv6, and my pc/network don't have ipv6 route. There is another string connection string supporting ipv4! Don't be careless like me.
 
-
-23:22
-- It's confirmed: the problem was missing dependencies.
-- now the app's database is MySQL. 
-- only 10 minutes taken 
-- great ai!
-
-
-23:37
-- previous functions still work.
-- everything seems alright (I hope so~).
-- I'm gonna sleep after I commit and push.
-- wish the deployment step goes as smoothly as step one.
-- good night world.
-
-
-23:52
-- my .md doesn't perform as I expected
-- try again
-
-
-### 28th Sept
-10:59
-- database using now is in my pc localhost
-- I'm trying Planetscale 
-
-
-11:12
-- planetscale is no more free now. TT
-- go back to supabase now.
-
-
-11:49
-- my pc cannot reach host of supabase
-- maybe it's because I choose Singapore as region? --but I didn't find hk
-- I use my proxy but app still cannot work
-
-
-11:56
-- ai told me it was about ipv6
-- my pc or network don't have ipv6 route 
-- I will try my app in github codespaces
-
-
-14:59
-- the connection string I selected dosen't support ipv4
-- and there is another connection supporting ipv4 but I didn't find it before
-- why this bug can take me 3 hours?
-- stupid bug and stupid me. TT
-
-
-15:14
-- nice! my app is now using supabase as database
 
 ### Summary/what I learnt in step 1
 - since my pc won't be always on, an external database on cloud is necessary. It's a primary truth and I should have known it, but I forgot it at the beginning. as a result, I did some useless work.
@@ -81,33 +21,28 @@
 
 
 # Step 2: deploy my app on vercel
-### 28th Sept
-16:12
-- I sign up an account on vercel and import this repo
-- but I can only use vercel for 14 days or I have to pay
+
+### Problem and Solution
+
+- Problem: When other people try to visit my app, they have to login in vercel and apply for join my team.
+- Reason&Solution: I forgot changing the configuration about authentication. Go into Dashboard/Setting/Depolyment Protection and there is a "Vercel Authentication". Click it to "Disabled".
 
 
-18:30
-- I guess I have successfully deployed this app: I can access this app in my phone while program in my vscode isn't running
-- I didn't change my source code in step 2 and only 2 extra file `vercel.json` and `.vercelignore` were added
-- actually there is a little question: users have to login in vercel
-
-
-18:47
-- now everybody can access this url without authentication
-- no lines are changed in any files. just change some settings in vercel dashboard
 ### Summary/what I learnt in step 2
 - I learnt how to deploy app on vercel
 - to my surprise, I didn't change my python code in this step. everything seems to have been done in step 1 when writing logic of determining which database(sqlite, mysql or supabase) will be selected
 
 # Step2.1: add ai into app
 > I forget adding ai into my app, now I'm going to make it up
-### 29th Sept
-01:33
-- new function didn't work and error code is 405(Method Not Found)
-- the reason is api routes in frontend and backend are different
 
-01：50
-- I want to use ai to translante notes' content
-- but some sentences will cause 500 INTERNAL SERVER ERROR
-- that's because these sentences are sensitive so LLM refused to translate
+- Problem: functions about AI didn't work and error code is 405 Method Not Found
+- Reason&Solution: It's because API routes in frontend and backend are different. AI make this stupid mistake and I didn't check it.
+
+
+- Problem: I try to translate note's content but some sentences will cause 500 Internal Server Error
+- Reason&Solution: It's because these sentences are sensitive so LLM refused to translate. I can do nothing with it but add an error msg to tell users what's going on.
+
+# Step2.2: restore supabase and redeployment
+
+- Problem: My database in supabase was paused and deployment was expired
+- Reason&Solution: It's because I haven't visit my app for more than half a month. Now I have to restore my database and redeploy my project. Besides, I submitted temp url in forms and this url would change after redeployment. Vercel provides a persistent url but I didn't find it before. Don't be careless like me. TT
